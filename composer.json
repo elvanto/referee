@@ -1,0 +1,23 @@
+{
+    "name": "elvanto/referee",
+    "version": "0.0.1",
+    "license": "MIT",
+    "description": "A simple tool for refactoring legacy PHP code",
+    "authors": [
+        "name": "Josh McRae",
+        "email": "josh.mcrae@elvanto.com"
+    ],
+    "require": {
+        "nikic/php-parser": "^2.1",
+        "symfony/console": "^3.0",
+        "symfony/filesystem": "^3.0",
+        "symfony/finder": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.3"
+    },
+    "autoload": {
+	    "psr-4": {"Referee\\": "src/"}
+    },
+    "bin": ["bin/referee"]
+}

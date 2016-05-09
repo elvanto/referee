@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+
+$cli = new Application('Referee', '0.0.1');
+$cli->add(new Referee\Command\ExtractClassCommand());
+$cli->run();
