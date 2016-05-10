@@ -41,6 +41,12 @@ class ExtractClassCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Report changes that would be made without changing files'
+            )
+            ->addOption(
+                'exclude',
+                null,
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Specify a directory to exclude when replacing usage'
             );
     }
 
@@ -79,6 +85,10 @@ class ExtractClassCommand extends Command
             $finder
                 ->in(realpath($dir))
                 ->name('*.php');
+        }
+
+        foreach ($input->getOption('exclude') as $exclude) {
+            $finder->exclude($exclude);
         }
 
         foreach ($finder as $file) {
