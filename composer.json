@@ -4,11 +4,12 @@
     "license": "MIT",
     "description": "A simple tool for refactoring legacy PHP code",
     "authors": [
-        "name": "Josh McRae",
-        "email": "josh.mcrae@elvanto.com"
+        {
+            "name": "Josh McRae",
+            "email": "josh.mcrae@elvanto.com"
+        }
     ],
     "require": {
-        "nikic/php-parser": "^2.1",
         "symfony/console": "^3.0",
         "symfony/filesystem": "^3.0",
         "symfony/finder": "^3.0"

@@ -2,16 +2,13 @@
 
 namespace Referee\Transformation;
 
-use PhpParser\Node\Stmt;
-
 interface TransformationInterface
 {
     /**
-     * Applies the transformation to an array of statements
-     * and returns the result.
+     * Applies the transformation to a source file and returns the result.
      *
-     * @param  Stmt[] $stmts
-     * @return Stmt[]
+     * @param  string $source Source file contents
+     * @return string
      */
-    public function transform($stmts);
+    public function transform($source);
 }
