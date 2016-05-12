@@ -97,7 +97,7 @@ class ExtractClassCommand extends Command
                 $content = $file->getContents();
                 foreach ($functions as $function) {
                     $content = preg_replace(
-                        "/(?<![:>]|function )\b$function\(/",
+                        "/(?<![:>]|function |function \&)\b$function\(/",
                         "\\$namespace\\$class_name::$function(",
                         $content, -1, $replacements
                     );

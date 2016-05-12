@@ -70,7 +70,7 @@ class ExtractClassTransformation implements TransformationInterface
                 $line = str_replace('function', 'public static function', $line);
 
                 /* Store function name */
-                preg_match('/function ([\w]*)/', $line, $matches);
+                preg_match('/function \&?([\w]*)/', $line, $matches);
                 $this->functionNames[] = $matches[1];
             }
 
@@ -99,7 +99,7 @@ class ExtractClassTransformation implements TransformationInterface
         foreach ($this->functionNames as $function) {
             /* Replace function usage with static calls on self */
             $result = preg_replace(
-                "/(?<![:>]|function )\b$function\(/",
+                "/(?<![:>]|function |function \&)\b$function\(/",
                 "self::$function(",
                 $result
             );
