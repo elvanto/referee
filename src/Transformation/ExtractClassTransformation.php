@@ -67,7 +67,7 @@ class ExtractClassTransformation implements TransformationInterface
 
             /* Convert function definition to static method definition */
             if ($this->isFunctionDefinition($line)) {
-                $line = str_replace('function', 'public static function', $line);
+                $line = str_replace('function ', 'public static function ', $line);
 
                 /* Store function name */
                 preg_match('/function \&?([\w]*)/', $line, $matches);
