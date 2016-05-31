@@ -10,12 +10,13 @@ class StaticClass
         // Print all arguments
         echo $a, $b;
     }
+
     /**
      * Second function
      * @version 1.0.0
      */
     public static function func_b($foo, $bar)
     {
-        func_a($foo, $bar);
+        self::func_a($foo, $bar);
     }
 }

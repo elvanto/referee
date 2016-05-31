@@ -2,13 +2,9 @@
 
 namespace Referee\Transformation;
 
-use PhpParser\BuilderFactory;
-use PhpParser\NodeTraverser;
-use PhpParser\Node\Stmt;
-
 /**
- * Converts a series of statements defining functions into a class
- * with equivalent static methods.
+ * Converts a source file containing function definitions into a namespaced
+ * class containing equivalent static methods.
  */
 class ExtractClassTransformation implements TransformationInterface
 {
@@ -27,16 +23,21 @@ class ExtractClassTransformation implements TransformationInterface
      */
     protected $functionNames = [];
 
-    /**
-     * @var BuilderFactory
-     */
-    protected $builder;
-
     function __construct($namespace, $class_name)
     {
         $this->namespace = $namespace;
         $this->className = $class_name;
-        $this->builder = new BuilderFactory();
+    }
+
+    /**
+     * Returns true if a line contains a function definition
+     *
+     * @param  string $line Line of source file
+     * @return boolean
+     */
+    protected function isFunctionDefinition($line)
+    {
+        return strpos(trim($line), 'function') === 0;
     }
 
     /**
@@ -51,73 +52,59 @@ class ExtractClassTransformation implements TransformationInterface
     }
 
     /**
-     * Applies the transformation to an array of statements
-     * and returns the result.
+     * Applies the transformation to a source file and returns the result.
      *
-     * @param  Stmt[] $stmts
-     * @return Stmt[]
+     * @param  string $source Source file contents
+     * @return string
      */
-    public function transform($stmts)
+    public function transform($source)
     {
-        $node = $this->builder->namespace($this->namespace);
-        $class = $this->builder->class($this->className);
+        $lines = explode("\n", trim($source));
+        $transformed = array();
 
-        /**
-         * Collect all functions and add them as static methods
-         * on the new class.
-         */
-        foreach ($stmts as $stmt) {
-            if ($stmt instanceof Stmt\Function_) {
-                $this->functionNames[] = $stmt->name;
-                $class->addStmt($this->staticMethod($stmt));
+        $in_class = false;
+        foreach ($lines as $line) {
+
+            /* Convert function definition to static method definition */
+            if ($this->isFunctionDefinition($line)) {
+                $line = str_replace('function ', 'public static function ', $line);
+
+                /* Store function name */
+                preg_match('/function \&?([\w]*)/', $line, $matches);
+                $this->functionNames[] = $matches[1];
             }
+
+            /* Wrap following content in a class definition */
+            if (!$in_class && !empty($line) && strpos($line, '<?php') === false) {
+                $transformed[] = 'namespace ' . $this->namespace . ';';
+                $transformed[] = '';
+                $transformed[] = 'class ' . $this->className;
+                $transformed[] = '{';
+
+                $in_class = true;
+            }
+
+            /* Apply indentation to lines within the class */
+            if ($in_class && trim($line) != '') {
+                $line = "    $line";
+            }
+
+            $transformed[] = $line;
         }
 
-        $node->addStmt($class);
-        return array($node->getNode());
-    }
+        /* Close the class definition */
+        $transformed[] = '}';
+        $result = implode("\n", $transformed);
 
-    /**
-     * Returns a static method using a standard
-     * function.
-     *
-     * @param  Stmt\Function_ $function
-     * @return Stmt\ClassMethod
-     */
-    protected function staticMethod(Stmt\Function_ $function)
-    {
-        $method = $this->builder->method($function->name)
-            ->makePublic()
-            ->makeStatic();
-
-        if ($function->byRef)
-            $method->makeReturnByRef();
-
-        foreach ($function->params as $param)
-            $method->addParam($param);
-
-        foreach ($function->stmts as $stmt)
-            $method->addStmt($stmt);
-
-        
-        /**
-         * Add the original comments to the method.
-         *
-         * If a DocComment is present it is given preference over
-         * standard comments.
-         */
-        $doc = $function->getDocComment();
-        $comments = $function->getAttribute('comments');
-
-        if (!is_null($doc)) {
-            $method->setDocComment($doc);
-        } else if (!empty($comments)) {
-            $comments = array_map(function ($c) {
-                return $c->getText();
-            }, $comments);
-            $method->setDocComment(implode(PHP_EOL, $comments));
+        foreach ($this->functionNames as $function) {
+            /* Replace function usage with static calls on self */
+            $result = preg_replace(
+                "/(?<![:>]|function |function \&)\b$function\(/",
+                "self::$function(",
+                $result
+            );
         }
 
-        return $method;
+        return $result;
     }
 }

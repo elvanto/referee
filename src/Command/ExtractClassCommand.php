@@ -2,11 +2,7 @@
 
 namespace Referee\Command;
 
-use PhpParser\ParserFactory;
-use PhpParser\NodeTraverser;
 use Referee\Transformation\ExtractClassTransformation;
-use Referee\Visitor\StaticCallVisitor;
-use Referee\Printer\ImprovedPrinter;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Console\Command\Command;
@@ -47,10 +43,10 @@ class ExtractClassCommand extends Command
                 'Report changes that would be made without changing files'
             )
             ->addOption(
-                'list-functions',
+                'exclude',
                 null,
-                InputOption::VALUE_NONE,
-                'List function names that have been translated to static methods'
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Specify a directory to exclude when replacing usage'
             );
     }
 
@@ -76,26 +72,13 @@ class ExtractClassCommand extends Command
             return 1;
         }
 
-        $transformation = new ExtractClassTransformation($namespace, $class_name);
-        $traverser = new NodeTraverser();
-        $printer = new ImprovedPrinter();
-
         /* Replace function definitions with a static class */
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP5);
-        $statements = $parser->parse(file_get_contents($filename));
-
-        $class_file = $transformation->transform($statements);
+        $transformation = new ExtractClassTransformation($namespace, $class_name);
+        $source = file_get_contents(realpath($filename));
+        $class_file = $transformation->transform($source);
 
         /* Replace function usage with static calls */
         $functions = $transformation->getFunctionNames();
-        $visitor = new StaticCallVisitor($namespace, $class_name, $functions);
-        $traverser->addVisitor($visitor);
-
-        if ($input->getOption('list-functions')) {
-            foreach ($functions as $function) {
-                $output->writeln($function);
-            }
-        }
 
         $finder->files();
         foreach ($input->getArgument('search') as $dir) {
@@ -104,13 +87,17 @@ class ExtractClassCommand extends Command
                 ->name('*.php');
         }
 
+        foreach ($input->getOption('exclude') as $exclude) {
+            $finder->exclude($exclude);
+        }
+
         foreach ($finder as $file) {
             try {
                 $changes = 0;
                 $content = $file->getContents();
                 foreach ($functions as $function) {
                     $content = preg_replace(
-                        "/(?<=[^:>])\b$function\(/",
+                        "/(?<![:>]|function |function \&)\b$function\(/",
                         "\\$namespace\\$class_name::$function(",
                         $content, -1, $replacements
                     );
@@ -141,8 +128,7 @@ class ExtractClassCommand extends Command
 
         /* Write changes to the source file */
         if (!$input->getOption('dry-run')) {
-            $class_file = $traverser->traverse($class_file);
-            $fs->dumpFile($filename, $printer->prettyPrintFile($class_file));
+            $fs->dumpFile($filename, $class_file);
         }
     }
 }

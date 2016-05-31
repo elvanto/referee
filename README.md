@@ -25,11 +25,6 @@ The ``extract-class`` command takes the name of a file containing function defin
 
 Further commands will be added in future.
 
-Notes
------
-
-Referee uses the excellent [PHP-Parser](https://github.com/nikic/PHP-Parser) by Nikita Popov for parsing and generating source code. While the resulting code attempts to maintain some of the original formatting of the file (such as line spacing between statements) through a custom pretty-printer, not all formatting is guaranteed to stay consistent.
-
 License
 -------
 [MIT License](LICENSE)
