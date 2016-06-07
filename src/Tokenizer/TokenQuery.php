@@ -5,8 +5,8 @@ namespace Referee\Tokenizer;
 /**
  * Token Query
  *
- * Manages a set of rules used by the Tokenizer to extract
- * sequences of tokens from source.
+ * Manages a set of rules used by the TokenIterator to extract
+ * token sequences.
  */
 class TokenQuery
 {
@@ -32,19 +32,33 @@ class TokenQuery
 
     /**
      * Adds a rule requiring the next token to be of a specific
-     * type. Optionally, the required text of the token may be
-     * set.
+     * type.
      *
      * @param  mixed  $type
-     * @param  string $text
      * @return $this
      */
-    public function expect($type, $text = null)
+    public function expect($type)
     {
         $this->rules[] = [
             'type' => $type,
-            'text' => $text,
             'required' => true
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Adds a rule allowing the next token to be of a specific
+     * type.
+     *
+     * @param  mixed  $type
+     * @return $this
+     */
+    public function accept($type)
+    {
+        $this->rules[] = [
+            'type' => $type,
+            'required' => false
         ];
 
         return $this;
@@ -62,6 +76,25 @@ class TokenQuery
         $this->rules[] = [
             'query' => $query,
             'required' => false
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Adds a rule matching all tokens within a matching set of
+     * brackets.
+     *
+     * @param  string $opening
+     * @param  string $closing
+     * @return $this
+     */
+    public function matching($opening, $closing)
+    {
+        $this->rules[] = [
+            'open' => $opening,
+            'close' => $closing,
+            'required' => true
         ];
 
         return $this;
