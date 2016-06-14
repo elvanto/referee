@@ -19,7 +19,7 @@ class TokenIteratorTest extends \PHPUnit_Framework_TestCase
         $tokenizer = new Tokenizer('
             <?php
             $msg = "Hello, world!";
-            global $db, $user;
+            global $db, $user, $account;
             global $is_admin;
         ');
 

@@ -111,6 +111,7 @@ class TokenIterator extends \ArrayIterator
                             $level--;
 
                             if ($level == 0) {
+                                $tokens->next();
                                 continue 2;
                             }
                         }
@@ -149,9 +150,34 @@ class TokenIterator extends \ArrayIterator
         $this->rewind();
 
         while ($tokens = self::match($query, $this)) {
-            $sequences[] = new \ArrayIterator($tokens);
+            $sequences[] = new TokenIterator($tokens);
         }
 
         return $sequences;
+    }
+
+    /**
+     * Advances the iterator until the next token of requested 
+     * type is encountered. If a token is not found, the offset
+     * of the iterator will not change and false is returned.
+     *
+     * @param  mixed $type
+     * @return boolean
+     */
+    public function seekType($type)
+    {
+        $offset = $this->key();
+        $this->next();
+
+        while ($this->valid()) {
+            if ($this->current()->getType() == $type) {
+                return true;
+            }
+
+            $this->next();
+        }
+
+        $this->seek($offset);
+        return false;
     }
 }
