@@ -20,6 +20,11 @@ class ExtractGlobalsTransformation implements TransformationInterface
     /**
      * @var string[]
      */
+    protected $superGlobalNames = [];
+
+    /**
+     * @var string[]
+     */
     protected $methodNames = [];
 
     /**
@@ -82,12 +87,20 @@ class ExtractGlobalsTransformation implements TransformationInterface
             ->expect(';')
             ->accept(T_WHITESPACE);
 
+        $supers_query = (new TokenQuery)
+            ->expect(T_VARIABLE)
+            ->expect('[')
+            ->expect(T_CONSTANT_ENCAPSED_STRING)
+            ->expect(']');
+
         $functions = $tokens->query($functions_query);
 
         foreach ($functions as $function) {
             $name = '';
             $local = [];
+            $local_supers = [];
             $globals = $function->query($globals_query);
+            $supers = $function->query($supers_query);
 
             $function->rewind();
             if ($function->seekType(T_STRING)) {
@@ -108,8 +121,32 @@ class ExtractGlobalsTransformation implements TransformationInterface
                 }
             }
 
+            foreach ($supers as $super) {
+                $super_name = '';
+                foreach ($super as $offset => $token) {
+                    if ($offset == 0 && $token->getText() != '$GLOBALS') {
+                        break;
+                    }
+
+                    if ($token->getType() == T_CONSTANT_ENCAPSED_STRING) {
+                        $super_name = $token->getText();
+                        $super_name = trim($super_name, "'");
+                        $super_name = trim($super_name, '"');
+
+                        $this->superGlobalNames[] = $local_supers[] = $super_name;
+                    }
+
+                    $token->setText('');
+
+                    /* Last token is replaced with an instance member variable */
+                    if ($offset == 3) {
+                        $token->setText('$this->' . $super_name);
+                    }
+                }
+            }
+
             foreach ($function as $token) {
-                if (count($local) > 0 && $token->getType() == T_STATIC) {
+                if ((count($local) > 0 || count($local_supers) > 0) && $token->getType() == T_STATIC) {
                     $token->setText('');
                     $function->next();
 
@@ -146,6 +183,10 @@ class ExtractGlobalsTransformation implements TransformationInterface
                     $append .= "    private $var;\n";
                 }
 
+                foreach ($this->superGlobalNames as $var) {
+                    $append .= "    private $$var;\n";
+                }
+
                 $append .= "\n";
                 $append .= "    function __construct()\n";
                 $append .= "    {\n";
@@ -153,6 +194,10 @@ class ExtractGlobalsTransformation implements TransformationInterface
 
                 foreach ($this->globalNames as $var) {
                     $append .= '        $this->' . str_replace('$', '', $var) . " = $var;\n";
+                }
+
+                foreach ($this->superGlobalNames as $var) {
+                    $append .= '        $this->' . $var . " = \$GLOBALS['$var'];\n";
                 }
 
                 $append .= "    }\n";

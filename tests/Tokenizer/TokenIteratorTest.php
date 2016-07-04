@@ -47,4 +47,23 @@ class TokenIteratorTest extends \PHPUnit_Framework_TestCase
         $declarations = $tokenizer->query($functions);
         $this->assertCount(1, $declarations);
     }
+
+    public function testMatchWithText()
+    {
+        $call_query = (new TokenQuery)
+            ->expect(T_STRING)
+            ->expect(T_DOUBLE_COLON)
+            ->expect(T_STRING, 'func_b');
+
+        $tokenizer = new Tokenizer('
+            <?php
+            Functions::func_a();
+            Functions::func_b();
+        ');
+
+        $tokens = $tokenizer->query($call_query);
+
+        $this->assertCount(1, $tokens);
+        $this->assertEquals('func_b', $tokens[0][2]->getText());
+    }
 }

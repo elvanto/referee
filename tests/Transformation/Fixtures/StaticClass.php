@@ -21,6 +21,6 @@ class Functions
 
     public static function func_c()
     {
-        return 404;
+        return $GLOBALS['account_id'];
     }
 }

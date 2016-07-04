@@ -6,6 +6,7 @@ class Functions
 {
     private $db;
     private $user;
+    private $account_id;
 
     function __construct()
     {
@@ -13,6 +14,7 @@ class Functions
 
         $this->db = $db;
         $this->user = $user;
+        $this->account_id = $GLOBALS['account_id'];
     }
 
     public function func_a($sql, $user)
@@ -26,8 +28,8 @@ class Functions
         $this->db->delete('items', array('user_id' => $this->user->id));
     }
 
-    public static function func_c()
+    public function func_c()
     {
-        return 404;
+        return $this->account_id;
     }
 }

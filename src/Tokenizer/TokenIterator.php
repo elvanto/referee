@@ -65,6 +65,12 @@ class TokenIterator extends \ArrayIterator
                 continue;
             }
 
+            if (isset($rule['text']) && $rule['text'] != $token->getText()) {
+                $query->start();
+                $sequence = [];
+                $tokens->next();
+            }
+
             if (isset($rule['query'])) {
                 /**
                  * If a sub-query does not yield matches and is not required

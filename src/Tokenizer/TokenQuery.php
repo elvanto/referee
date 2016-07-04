@@ -32,15 +32,18 @@ class TokenQuery
 
     /**
      * Adds a rule requiring the next token to be of a specific
-     * type.
+     * type. Optionally, a requirement for the token's text may
+     * also be set.
      *
      * @param  mixed  $type
+     * @param  string $text
      * @return $this
      */
-    public function expect($type)
+    public function expect($type, $text = null)
     {
         $this->rules[] = [
             'type' => $type,
+            'text' => $text,
             'required' => true
         ];
 
