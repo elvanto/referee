@@ -23,4 +23,9 @@ class Functions
     {
         return $GLOBALS['account_id'];
     }
+
+    public static function func_d()
+    {
+        return 404;
+    }
 }

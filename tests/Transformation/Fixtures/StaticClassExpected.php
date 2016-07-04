@@ -32,4 +32,9 @@ class Functions
     {
         return $this->account_id;
     }
+
+    public static function func_d()
+    {
+        return 404;
+    }
 }

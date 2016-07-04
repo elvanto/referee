@@ -165,7 +165,7 @@ class ExtractGlobalsTransformation implements TransformationInterface
                 }
             }
 
-            if (count($local) > 0) {
+            if (count($local) > 0 || count($local_supers) > 0) {
                 $this->methodNames[] = $name;
             }
         }

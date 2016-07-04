@@ -15,7 +15,7 @@ class ExtractGlobalsTransformationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(trim($expect), trim($output));
         $this->assertEquals('Functions', $transformation->getClassName());
         $this->assertEquals(
-            array('func_a', 'func_b'),
+            array('func_a', 'func_b', 'func_c'),
             $transformation->getMethodNames()
         );
         $this->assertEquals(
